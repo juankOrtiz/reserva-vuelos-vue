@@ -3,7 +3,12 @@
     <h3>Vuelos Disponibles</h3>
     <input type="text" v-model="filtroAerolinea" placeholder="Filtrar por aerolínea..." class="filter-input" />
 
-    <table v-if="vuelosFiltrados.length">
+    <div v-if="cargandoVuelos" class="loading-spinner">
+      Cargando vuelos...
+      <div class="spinner"></div>
+    </div>
+
+    <table v-else-if="vuelosFiltrados.length > 0">
       <thead>
         <tr>
           <th>Aerolínea</th>
@@ -42,10 +47,12 @@ export default {
     return {
       vuelos: [],
       filtroAerolinea: '', // Dato reactivo para el campo de filtro
-      vueloSeleccionadoLocal: null // Para gestionar la selección dentro de este componente
+      vueloSeleccionadoLocal: null, // Para gestionar la selección dentro de este componente
+      cargandoVuelos: false // Para mostrar un spinner mientras se cargan los vuelos
     };
   },
   async mounted() {
+    this.cargandoVuelos = true; // Activar spinner al inicio de la carga
     try {
       const resVuelos = await fetch('/data/vuelos.json');
       this.vuelos = await resVuelos.json();
@@ -53,6 +60,8 @@ export default {
     } catch (error) {
       console.error('Error al cargar vuelos:', error);
       // Podrías mostrar un mensaje de error aquí
+    } finally {
+      this.cargandoVuelos = false; // Desactivar spinner al finalizar la carga
     }
   },
   // Propiedades computadas: se recalculan SOLO cuando sus dependencias cambian y su resultado se cachea.
@@ -155,5 +164,29 @@ th {
   text-align: center;
   margin-top: 20px;
   color: #666;
+}
+
+.loading-spinner {
+  text-align: center;
+  margin: 40px 0;
+  font-size: 1.1em;
+  color: #555;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #007bff; /* Color del spinner */
+  animation: spin 1s ease infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
