@@ -18,22 +18,28 @@
     </div>
     <p v-else>No se ha seleccionado ningún vuelo.</p>
 
-
     <ListaVuelos @vuelo-seleccionado="handleVueloSeleccionado" />
 
-    <p id="confirmacionMessage" :class="{ 'success': confirmacionExitosa, 'error': !confirmacionExitosa, 'hidden': !mensajeConfirmacion }">
+    <p id="confirmacionMessage"
+       :class="{
+         'success': confirmacionExitosa && !isSubmitting,
+         'error': !confirmacionExitosa && mensajeConfirmacion && !isSubmitting,
+         'info-submitting': isSubmitting,
+         'hidden': !mensajeConfirmacion
+       }">
         {{ mensajeConfirmacion }}
+        <span v-if="isSubmitting" class="inline-spinner"></span>
     </p>
 
     <div class="button-group">
       <template v-if="!reservaCompletadaExitosamente">
-        <button type="button" @click="$emit('paso-anterior')" class="prev-btn" :disabled="procesandoReserva">Anterior</button>
+        <button type="button" @click="$emit('paso-anterior')" class="prev-btn" :disabled="isSubmitting">Anterior</button>
         <button
           type="button"
           @click="confirmarReserva"
-          :disabled="!vueloSeleccionado || procesandoReserva"
+          :disabled="!vueloSeleccionado || isSubmitting"
           class="confirm-btn">
-          {{ procesandoReserva ? 'Confirmando...' : 'Confirmar Reserva' }}
+          {{ isSubmitting ? 'Confirmando...' : 'Confirmar Reserva' }}
         </button>
       </template>
       <template v-else>
@@ -72,7 +78,7 @@ export default {
       mensajeConfirmacion: '',
       confirmacionExitosa: false,
       reservaCompletadaExitosamente: false,
-      procesandoReserva: false
+      isSubmitting: false
     };
   },
   methods: {
@@ -95,35 +101,34 @@ export default {
         if (this.reservaCompletadaExitosamente) {
             this.reservaCompletadaExitosamente = false; // Permite un nuevo intento de confirmación
             this.mensajeConfirmacion = ''; // Limpia el mensaje anterior
+            this.confirmacionExitosa = false;
         }
     },
     async confirmarReserva() {
-      this.mensajeConfirmacion = 'Enviando reserva...';
-      this.confirmacionExitosa = false;
-      this.ocultarConfirmacionMensaje(); // Limpiar la clase hidden
-
-      if (!this.vueloSeleccionado) {
-          this.mensajeConfirmacion = 'Debe seleccionar un vuelo antes de confirmar la reserva.';
-          this.confirmacionExitosa = false;
+      // Evitar múltiples envíos si ya se está procesando o no hay vuelo
+      if (this.isSubmitting || !this.vueloSeleccionado) {
           return;
       }
 
+      this.isSubmitting = true; // Activar estado de envío
+      this.mensajeConfirmacion = 'Enviando reserva...';
+      this.confirmacionExitosa = false;
+      document.getElementById('confirmacionMessage').classList.remove('hidden');
+
       try {
-        // Simulación de una llamada AJAX para enviar datos
         console.log('Enviando datos de reserva:', {
             pasajero: this.datosReserva.pasajero,
             destino: this.datosReserva.destino,
             vuelo: this.vueloSeleccionado
         });
 
-        const response = await new Promise((resolve, reject) => {
+        const response = await new Promise(resolve => {
           setTimeout(() => {
-            if (Math.random() > 0.3) { // 70% de éxito
-              resolve({ success: true, message: '¡Reserva confirmada con éxito!' });
-            } else {
-              reject({ success: false, message: 'Hubo un error al confirmar la reserva. Intente nuevamente.' });
-            }
-          }, 1500);
+            // ELIMINADO EL RANDOM. SIEMPRE EXITOSO PARA PRUEBAS.
+            resolve({ success: true, message: '¡Reserva confirmada con éxito!' });
+            // Si quisieras simular un error:
+            // reject({ success: false, message: 'Hubo un error al confirmar la reserva.' });
+          }, 1500); // Mantenemos el delay para que se vea el spinner
         });
 
         this.mensajeConfirmacion = response.message;
@@ -136,9 +141,9 @@ export default {
       } catch (error) {
         this.mensajeConfirmacion = error.message || 'Error desconocido al procesar la reserva.';
         this.confirmacionExitosa = false;
-        this.reservaCompletadaExitosamente = false;
+        this.reservaCompletadaExitosamente = false; // Si falla, no pasamos al estado de "completada"
       } finally {
-        this.procesandoReserva = false; // Siempre restablecer el estado de procesamiento
+        this.isSubmitting = false; // Desactivar estado de envío al finalizar
       }
     },
     ocultarConfirmacionMensaje() {
@@ -192,6 +197,9 @@ button:hover {
     padding: 10px;
     border-radius: 4px;
     border: 1px solid;
+    display: flex; /* Para alinear el texto y el spinner */
+    justify-content: center; /* Centrar horizontalmente */
+    align-items: center; /* Centrar verticalmente */
 }
 
 .success {
@@ -234,5 +242,29 @@ button:disabled {
 .confirm-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.info-submitting {
+    color: #007bff; /* Color azul para "Enviando..." */
+    border-color: #007bff;
+    background-color: #e0f2ff; /* Fondo azul claro */
+}
+
+/* Estilos para el spinner en línea */
+.inline-spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border-left-color: #007bff; /* Coincide con el color del texto */
+  animation: spin 0.8s ease infinite;
+  display: inline-block;
+  vertical-align: middle; /* Alinea con el texto */
+  margin-left: 8px; /* Espacio entre texto y spinner */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
