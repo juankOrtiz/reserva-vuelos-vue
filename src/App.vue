@@ -9,7 +9,7 @@
         <button type="button" @click="confirmarReset" class="reset-btn">Borrar y Reiniciar</button>
       </div>
 
-      <div class="show-data-container" v-if="pasoActual >= 2">
+      <div class="show-data-container" v-if="pasoActual >= 2 && pasoActual < 3">
         <button type="button" @click.stop="toggleTooltip" class="show-data-btn">Datos actuales</button>
         <div v-if="showTooltip" class="data-tooltip">
           <h4>Datos actuales de la reserva:</h4>
