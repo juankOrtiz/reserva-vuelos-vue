@@ -4,18 +4,18 @@
 
         <div class="form-group">
             <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" v-model="pasajero.nombre" @blur="validarCampo('nombre')" />
-            <p v-if="errores.nombre" class="error-message">{{ errores.nombre }}</p>
+            <input type="text" id="nombre" v-model="pasajero.nombre" @blur="marcarTocado('nombre'); validarCampo('nombre');" />
+            <p v-if="errores.nombre && touched.nombre" class="error-message">{{ errores.nombre }}</p>
         </div>
 
         <div class="form-group">
             <label for="tipoDocumento">Tipo de Documento:</label>
-            <select id="tipoDocumento" v-model="pasajero.tipoDocumento" @change="handleTipoDocumentoChange">
+            <select id="tipoDocumento" v-model="pasajero.tipoDocumento" @change="marcarTocado('tipoDocumento'); handleTipoDocumentoChange();">
                 <option value="">Seleccione</option>
                 <option value="DNI">DNI</option>
                 <option value="Pasaporte">Pasaporte</option>
             </select>
-            <p v-if="errores.tipoDocumento" class="error-message">{{ errores.tipoDocumento }}</p>
+            <p v-if="errores.tipoDocumento && touched.tipoDocumento" class="error-message">{{ errores.tipoDocumento }}</p>
         </div>
 
         <div class="form-group" v-if="pasajero.tipoDocumento">
@@ -25,9 +25,9 @@
                 id="numeroDocumento"
                 v-model="pasajero.numeroDocumento"
                 :disabled="!pasajero.tipoDocumento"
-                @blur="validarCampo('numeroDocumento')"
+                @blur="marcarTocado('numeroDocumento'); validarCampo('numeroDocumento');"
             />
-            <p v-if="errores.numeroDocumento" class="error-message">{{ errores.numeroDocumento }}</p>
+            <p v-if="errores.numeroDocumento && touched.numeroDocumento" class="error-message">{{ errores.numeroDocumento }}</p>
         </div>
 
         <button type="button" @click="siguientePaso">Siguiente</button>
@@ -38,22 +38,63 @@
 // Aquí irá la lógica JavaScript de este componente
 export default {
   name: 'DatosPasajero', // Un nombre descriptivo para el componente
+  props: {
+    // Define la prop que recibirá los datos iniciales del pasajero
+    datosIniciales: {
+      type: Object,
+      default: () => ({ nombre: '', tipoDocumento: '', numeroDocumento: '' })
+    }
+  },
   data() {
     return {
       // Define los datos de tu componente aquí. Vue los hará reactivos.
       pasajero: {
-        nombre: '',
-        tipoDocumento: '',
-        numeroDocumento: '',
+        ...this.datosIniciales
       },
       errores: {
         nombre: '',
         tipoDocumento: '',
         numeroDocumento: '',
+      },
+      // NUEVO: Objeto para rastrear si cada campo ha sido "tocado"
+      touched: {
+        nombre: false,
+        tipoDocumento: false,
+        numeroDocumento: false
       }
     };
   },
+  watch: {
+    // Opcional pero buena práctica: observa si la prop datosIniciales cambia
+    // y actualiza los datos internos del componente.
+    // Esto es útil si la prop pudiera cambiar mientras el componente ya está montado.
+    // En nuestro caso, el componente se desmonta y monta, por lo que `data` se inicializa
+    // de nuevo, pero es un buen patrón a conocer.
+    datosIniciales: {
+      handler(newVal) {
+        Object.assign(this.pasajero, newVal);
+        // Cuando los datos iniciales cambian (ej. al retroceder),
+        // reiniciamos el estado "tocado" para evitar mostrar errores inmediatamente
+        this.resetearTocado();
+        // Luego, re-validamos para que los datos cargados tengan su estado de error calculado,
+        // pero NO se mostrarán hasta que el campo sea tocado o el formulario se intente enviar.
+        this.validarCampo('nombre');
+        this.validarCampo('tipoDocumento');
+        this.handleTipoDocumentoChange(false); // Pasar 'false' para no marcar como tocado al re-hidratar
+      },
+      deep: true, // Observa cambios anidados dentro del objeto
+      immediate: true // Ejecuta el handler inmediatamente al montar
+    }
+  },
   methods: {
+    marcarTocado(campo) {
+      this.touched[campo] = true;
+    },
+    resetearTocado() {
+      this.touched.nombre = false;
+      this.touched.tipoDocumento = false;
+      this.touched.numeroDocumento = false;
+    },
     validarCampo(campo) {
         // Validar Nombre
         if (campo === 'nombre') {
@@ -88,8 +129,10 @@ export default {
             }
         }
     },
-    handleTipoDocumentoChange() {
-        // Cuando el tipo de documento cambia, validamos el tipo
+    handleTipoDocumentoChange(markAsTouched = true) { // Añadir parámetro opcional
+        if (markAsTouched) { // Solo marcar como tocado si es un cambio real del usuario
+            this.marcarTocado('tipoDocumento');
+        }
         this.validarCampo('tipoDocumento');
 
         // Si el tipo de documento deja de ser válido, limpiamos el numeroDocumento y su error.
@@ -97,6 +140,7 @@ export default {
         if (!this.pasajero.tipoDocumento) {
             this.pasajero.numeroDocumento = '';
             this.errores.numeroDocumento = '';
+            this.touched.numeroDocumento = false;
         } else {
             // Si selecciona un tipo, y el campo de numero ya tiene algo, re-validamos
             if (this.pasajero.numeroDocumento) {
@@ -105,15 +149,21 @@ export default {
         }
     },
     siguientePaso() {
-      // Validar todos los campos antes de avanzar
+      // Al intentar avanzar, marcamos TODOS los campos como tocados para forzar la validación
+      this.marcarTocado('nombre');
+      this.marcarTocado('tipoDocumento');
+      // Solo marcar numeroDocumento si está visible (es decir, tipoDocumento seleccionado)
+      if (this.pasajero.tipoDocumento) {
+          this.marcarTocado('numeroDocumento');
+      }
+
+      // Luego, ejecutar todas las validaciones
       this.validarCampo('nombre');
       this.validarCampo('tipoDocumento');
-      // Solo validar numeroDocumento si el tipo está seleccionado
       if (this.pasajero.tipoDocumento) {
           this.validarCampo('numeroDocumento');
       }
 
-      // Comprobar si hay errores en cualquier campo
       const tieneErrores = Object.values(this.errores).some(error => error !== '');
 
       if (!tieneErrores) {

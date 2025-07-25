@@ -4,9 +4,12 @@
     <progress :value="pasoActual" max="3"></progress>
     <p>Paso {{ pasoActual }} de 3</p>
 
-    <DatosPasajero v-if="pasoActual === 1" @siguiente-paso="avanzarPaso" />
+    <DatosPasajero v-if="pasoActual === 1"
+        :datosIniciales="datosReservaGlobal.pasajero"
+        @siguiente-paso="avanzarPaso" />
     <DatosDestino
       v-if="pasoActual === 2"
+      :datosIniciales="datosReservaGlobal.destino"
       @siguiente-paso="avanzarPaso"
       @paso-anterior="retrocederPaso"
       :provinciasMaestro="provincias"
@@ -38,8 +41,17 @@ export default {
       pasoActual: 1, // Controla qué paso del formulario se muestra
       // Aquí podríamos almacenar los datos generales de la reserva que se recogen de los pasos
       datosReservaGlobal: {
-        pasajero: {},
-        destino: {},
+        pasajero: {
+          nombre: '',
+          tipoDocumento: '',
+          numeroDocumento: ''
+        },
+        destino: {
+          provinciaOrigen: '',
+          ciudadOrigen: '',
+          provinciaDestino: '',
+          ciudadDestino: ''
+        },
         vueloSeleccionado: null
       },
       provincias: [], // Datos maestros de provincias
@@ -80,9 +92,9 @@ export default {
     avanzarPaso(datosDelPaso) {
       // Guardamos los datos del paso actual en el estado global
       if (this.pasoActual === 1) {
-        this.datosReservaGlobal.pasajero = datosDelPaso;
+        Object.assign(this.datosReservaGlobal.pasajero, datosDelPaso);
       } else if (this.pasoActual === 2) {
-        this.datosReservaGlobal.destino = datosDelPaso;
+        Object.assign(this.datosReservaGlobal.destino, datosDelPaso);
       }
       this.pasoActual++; // Avanzamos al siguiente paso
       console.log('Datos globales hasta ahora:', this.datosReservaGlobal);
@@ -95,8 +107,8 @@ export default {
       console.log('Reserva completada. Reiniciando formulario...');
       this.pasoActual = 1; // Volver al primer paso
       this.datosReservaGlobal = { // Limpiar todos los datos de la reserva
-        pasajero: {},
-        destino: {},
+        pasajero: { nombre: '', tipoDocumento: '', numeroDocumento: '' },
+        destino: { provinciaOrigen: '', ciudadOrigen: '', provinciaDestino: '', ciudadDestino: '' },
         vueloSeleccionado: null
       };
       // Aquí, idealmente, también resetearías el estado de los componentes hijos si tuvieran estado interno
