@@ -65,28 +65,21 @@ export default {
   },
   methods: {
     async cargarDatosMaestros() {
-      // Simulación de carga de provincias (la misma que en Vanilla JS)
-      this.provincias = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve([
-            { id: 1, nombre: 'Buenos Aires' },
-            { id: 2, nombre: 'Córdoba' },
-            { id: 3, nombre: 'Santa Fe' }
-          ]);
-        }, 500);
-      });
+      try {
+        // Cargar provincias
+        const resProvincias = await fetch('/data/provincias.json');
+        this.provincias = await resProvincias.json();
+        console.log('Provincias cargadas:', this.provincias);
 
-      // Simulación de carga de todas las ciudades (la misma que en Vanilla JS)
-      this.todasLasCiudades = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve({
-            1: [{ id: 101, nombre: 'Capital Federal' }, { id: 102, nombre: 'La Plata' }],
-            2: [{ id: 201, nombre: 'Córdoba Capital' }, { id: 202, nombre: 'Villa Carlos Paz' }],
-            3: [{ id: 301, nombre: 'Rosario' }, { id: 302, nombre: 'Santa Fe Capital' }]
-          });
-        }, 500);
-      });
-      console.log('Datos maestros cargados:', this.provincias, this.todasLasCiudades);
+        // Cargar todas las ciudades
+        const resCiudades = await fetch('/data/ciudades.json');
+        this.todasLasCiudades = await resCiudades.json();
+        console.log('Ciudades cargadas:', this.todasLasCiudades);
+
+      } catch (error) {
+        console.error('Error al cargar datos maestros:', error);
+        // Podrías mostrar un mensaje de error al usuario aquí
+      }
     },
     // Método llamado cuando un componente hijo emite 'siguiente-paso'
     avanzarPaso(datosDelPaso) {

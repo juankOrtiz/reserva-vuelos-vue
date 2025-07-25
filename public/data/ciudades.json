@@ -1,0 +1,14 @@
+{
+  "1": [
+    { "id": 101, "nombre": "Capital Federal" },
+    { "id": 102, "nombre": "La Plata" }
+  ],
+  "2": [
+    { "id": 201, "nombre": "Córdoba Capital" },
+    { "id": 202, "nombre": "Villa Carlos Paz" }
+  ],
+  "3": [
+    { "id": 301, "nombre": "Rosario" },
+    { "id": 302, "nombre": "Santa Fe Capital" }
+  ]
+}

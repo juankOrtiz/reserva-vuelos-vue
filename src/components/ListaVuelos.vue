@@ -40,16 +40,20 @@ export default {
   name: 'ListaVuelos',
   data() {
     return {
-      // Datos de vuelos (simulados, en real se cargarían con AJAX)
-      vuelos: [
-        { id: 1, aerolinea: 'Aerolineas Argentinas', numeroVuelo: 'AR123', fecha: '2025-08-01', precio: 250, estado: 'Confirmado', seleccionado: false },
-        { id: 2, aerolinea: 'LATAM', numeroVuelo: 'LA456', fecha: '2025-08-01', precio: 180, estado: 'Demorado', seleccionado: false },
-        { id: 3, aerolinea: 'Flybondi', numeroVuelo: 'FB789', fecha: '2025-08-02', precio: 120, estado: 'Cancelado', seleccionado: false },
-        { id: 4, aerolinea: 'Aerolineas Argentinas', numeroVuelo: 'AR987', fecha: '2025-08-02', precio: 300, estado: 'Confirmado', seleccionado: false }
-      ],
+      vuelos: [],
       filtroAerolinea: '', // Dato reactivo para el campo de filtro
       vueloSeleccionadoLocal: null // Para gestionar la selección dentro de este componente
     };
+  },
+  async mounted() {
+    try {
+      const resVuelos = await fetch('/data/vuelos.json');
+      this.vuelos = await resVuelos.json();
+      console.log('Vuelos cargados:', this.vuelos);
+    } catch (error) {
+      console.error('Error al cargar vuelos:', error);
+      // Podrías mostrar un mensaje de error aquí
+    }
   },
   // Propiedades computadas: se recalculan SOLO cuando sus dependencias cambian y su resultado se cachea.
   computed: {
