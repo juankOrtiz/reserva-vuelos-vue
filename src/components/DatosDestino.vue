@@ -9,7 +9,7 @@
           {{ provincia.nombre }}
         </option>
       </select>
-      <p v-if="errores.provinciaOrigen && touched.provinciaOrigen" class="error-message">{{ errores.provinciaOrigen }}</p>
+      <CampoError :mensaje="errores.provinciaOrigen && touched.provinciaOrigen ? errores.provinciaOrigen : ''" />
     </div>
 
     <div class="form-group" v-if="reserva.provinciaOrigen">
@@ -20,7 +20,7 @@
           {{ ciudad.nombre }}
         </option>
       </select>
-      <p v-if="errores.ciudadOrigen && touched.ciudadOrigen" class="error-message">{{ errores.ciudadOrigen }}</p>
+      <CampoError :mensaje="errores.ciudadOrigen && touched.ciudadOrigen ? errores.ciudadOrigen : ''" />
     </div>
 
     <div class="form-group">
@@ -31,7 +31,7 @@
           {{ provincia.nombre }}
         </option>
       </select>
-      <p v-if="errores.provinciaDestino && touched.provinciaDestino" class="error-message">{{ errores.provinciaDestino }}</p>
+      <CampoError :mensaje="errores.provinciaDestino && touched.provinciaDestino ? errores.provinciaDestino : ''" />
     </div>
 
     <div class="form-group" v-if="reserva.provinciaDestino">
@@ -42,7 +42,7 @@
           {{ ciudad.nombre }}
         </option>
       </select>
-      <p v-if="errores.ciudadDestino && touched.ciudadDestino" class="error-message">{{ errores.ciudadDestino }}</p>
+      <CampoError :mensaje="errores.ciudadDestino && touched.ciudadDestino ? errores.ciudadDestino : ''" />
     </div>
 
     <button type="button" @click="$emit('paso-anterior')" class="prev-btn">Anterior</button>
@@ -51,8 +51,13 @@
 </template>
 
 <script>
+import CampoError from './CampoError.vue';
+
 export default {
   name: 'DatosDestino',
+  components: {
+    CampoError
+  },
   props: {
     datosIniciales: {
       type: Object,
@@ -249,12 +254,6 @@ input[type="text"]:disabled,
 select:disabled {
     background-color: #eee;
     cursor: not-allowed;
-}
-
-.error-message {
-  color: red;
-  font-size: 0.85em;
-  margin-top: 5px;
 }
 
 button {

@@ -5,7 +5,7 @@
         <div class="form-group">
             <label for="nombre">Nombre:</label>
             <input type="text" id="nombre" v-model="pasajero.nombre" @blur="marcarTocado('nombre'); validarCampo('nombre');" />
-            <p v-if="errores.nombre && touched.nombre" class="error-message">{{ errores.nombre }}</p>
+            <CampoError :mensaje="errores.nombre && touched.nombre ? errores.nombre : ''" />
         </div>
 
         <div class="form-group">
@@ -15,7 +15,7 @@
                 <option value="DNI">DNI</option>
                 <option value="Pasaporte">Pasaporte</option>
             </select>
-            <p v-if="errores.tipoDocumento && touched.tipoDocumento" class="error-message">{{ errores.tipoDocumento }}</p>
+            <CampoError :mensaje="errores.tipoDocumento && touched.tipoDocumento ? errores.tipoDocumento : ''" />
         </div>
 
         <div class="form-group" v-if="pasajero.tipoDocumento">
@@ -27,7 +27,7 @@
                 :disabled="!pasajero.tipoDocumento"
                 @blur="marcarTocado('numeroDocumento'); validarCampo('numeroDocumento');"
             />
-            <p v-if="errores.numeroDocumento && touched.numeroDocumento" class="error-message">{{ errores.numeroDocumento }}</p>
+            <CampoError :mensaje="errores.numeroDocumento && touched.numeroDocumento ? errores.numeroDocumento : ''" />
         </div>
 
         <button type="button" @click="siguientePaso">Siguiente</button>
@@ -35,9 +35,14 @@
 </template>
 
 <script>
+import CampoError from './CampoError.vue'; // Importa el componente de error
+
 // Aquí irá la lógica JavaScript de este componente
 export default {
   name: 'DatosPasajero', // Un nombre descriptivo para el componente
+    components: {
+        CampoError // Registra el componente CampoError para usarlo en este template
+    },
   props: {
     // Define la prop que recibirá los datos iniciales del pasajero
     datosIniciales: {
@@ -202,12 +207,6 @@ input[type="text"]:disabled,
 select:disabled {
     background-color: #eee;
     cursor: not-allowed;
-}
-
-.error-message {
-  color: red;
-  font-size: 0.85em;
-  margin-top: 5px;
 }
 
 button {
