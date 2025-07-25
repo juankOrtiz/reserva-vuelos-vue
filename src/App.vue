@@ -14,6 +14,7 @@
     <ResumenReserva
       v-if="pasoActual === 3"
       @paso-anterior="retrocederPaso"
+      @iniciar-nueva-reserva="resetearReserva"
       :datosReserva="datosReservaGlobal"
       :provinciasMaestro="provincias"
       :ciudadesMaestro="todasLasCiudades"/>
@@ -89,6 +90,18 @@ export default {
     // Método llamado cuando un componente hijo emite 'paso-anterior'
     retrocederPaso() {
       this.pasoActual--; // Retrocedemos un paso
+    },
+    resetearReserva() {
+      console.log('Reserva completada. Reiniciando formulario...');
+      this.pasoActual = 1; // Volver al primer paso
+      this.datosReservaGlobal = { // Limpiar todos los datos de la reserva
+        pasajero: {},
+        destino: {},
+        vueloSeleccionado: null
+      };
+      // Aquí, idealmente, también resetearías el estado de los componentes hijos si tuvieran estado interno
+      // que no se limpiara con el cambio de v-if. Para nuestro caso, al cambiar de paso, se vuelven a renderizar
+      // o se inicializan con datos vacíos si no se pasan props, lo cual es suficiente.
     }
   }
 }

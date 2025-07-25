@@ -25,8 +25,21 @@
         {{ mensajeConfirmacion }}
     </p>
 
-    <button type="button" @click="$emit('paso-anterior')" class="prev-btn">Anterior</button>
-    <button type="button" @click="confirmarReserva">Confirmar Reserva</button>
+    <div class="button-group">
+      <template v-if="!reservaCompletadaExitosamente">
+        <button type="button" @click="$emit('paso-anterior')" class="prev-btn" :disabled="procesandoReserva">Anterior</button>
+        <button
+          type="button"
+          @click="confirmarReserva"
+          :disabled="!vueloSeleccionado || procesandoReserva"
+          class="confirm-btn">
+          {{ procesandoReserva ? 'Confirmando...' : 'Confirmar Reserva' }}
+        </button>
+      </template>
+      <template v-else>
+        <button type="button" @click="$emit('iniciar-nueva-reserva')" class="new-reservation-btn">Iniciar Nueva Reserva</button>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -57,7 +70,9 @@ export default {
     return {
       vueloSeleccionado: null, // Para almacenar el vuelo que el usuario selecciona en ListaVuelos
       mensajeConfirmacion: '',
-      confirmacionExitosa: false
+      confirmacionExitosa: false,
+      reservaCompletadaExitosamente: false,
+      procesandoReserva: false
     };
   },
   methods: {
@@ -74,6 +89,13 @@ export default {
     handleVueloSeleccionado(vuelo) {
         // Este método se llama cuando ListaVuelos emite 'vuelo-seleccionado'
         this.vueloSeleccionado = vuelo;
+        // Si ya había una confirmación exitosa, re-habilitar el botón si selecciona otro vuelo
+        // para un caso hipotético donde un usuario pueda querer cambiar su selección post-éxito.
+        // Opcional: podrías decidir resetear todo aquí.
+        if (this.reservaCompletadaExitosamente) {
+            this.reservaCompletadaExitosamente = false; // Permite un nuevo intento de confirmación
+            this.mensajeConfirmacion = ''; // Limpia el mensaje anterior
+        }
     },
     async confirmarReserva() {
       this.mensajeConfirmacion = 'Enviando reserva...';
@@ -107,9 +129,16 @@ export default {
         this.mensajeConfirmacion = response.message;
         this.confirmacionExitosa = response.success;
 
+        if (response.success) {
+            this.reservaCompletadaExitosamente = true;
+        }
+
       } catch (error) {
         this.mensajeConfirmacion = error.message || 'Error desconocido al procesar la reserva.';
         this.confirmacionExitosa = false;
+        this.reservaCompletadaExitosamente = false;
+      } finally {
+        this.procesandoReserva = false; // Siempre restablecer el estado de procesamiento
       }
     },
     ocultarConfirmacionMensaje() {
@@ -177,5 +206,33 @@ button:hover {
 }
 .hidden {
     display: none !important; /* Asegurar que se oculte */
+}
+.button-group {
+    margin-top: 25px;
+    text-align: center; /* Centra los botones dentro del grupo */
+}
+
+.new-reservation-btn {
+    background-color: #28a745; /* Color verde para "Nueva Reserva" */
+}
+.new-reservation-btn:hover {
+    background-color: #218838;
+}
+
+/* Agregado para deshabilitar el botón de Confirmar si no hay vuelo seleccionado */
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.confirm-btn {
+  background-color: #007bff;
+}
+.confirm-btn:hover {
+  background-color: #0056b3;
+}
+.confirm-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 </style>
