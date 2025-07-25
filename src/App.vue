@@ -1,25 +1,62 @@
 <template>
   <div id="app-container">
     <h1>Formulario de Reserva de Vuelos (Vue.js)</h1>
-    <DatosPasajero />
-  </div>
+    <progress :value="pasoActual" max="3"></progress>
+    <p>Paso {{ pasoActual }} de 3</p>
+
+    <DatosPasajero v-if="pasoActual === 1" @siguiente-paso="avanzarPaso" />
+    <DatosDestino
+      v-if="pasoActual === 2"
+      @siguiente-paso="avanzarPaso"
+      @paso-anterior="retrocederPaso"
+    />
+    </div>
 </template>
 
 <script>
-// Importa el componente que acabamos de crear
 import DatosPasajero from './components/DatosPasajero.vue';
+import DatosDestino from './components/DatosDestino.vue';
+// import ResumenReserva from './components/ResumenReserva.vue'; // Todavía no lo tenemos
 
 export default {
-  name: 'App', // El nombre de este componente raíz
+  name: 'App',
   components: {
-    // Registra el componente DatosPasajero para que pueda ser usado en la plantilla
-    DatosPasajero
+    DatosPasajero,
+    DatosDestino
+    // ResumenReserva
+  },
+  data() {
+    return {
+      pasoActual: 1, // Controla qué paso del formulario se muestra
+      // Aquí podríamos almacenar los datos generales de la reserva que se recogen de los pasos
+      datosReservaGlobal: {
+        pasajero: {},
+        destino: {}
+      }
+    };
+  },
+  methods: {
+    // Método llamado cuando un componente hijo emite 'siguiente-paso'
+    avanzarPaso(datosDelPaso) {
+      // Guardamos los datos del paso actual en el estado global
+      if (this.pasoActual === 1) {
+        this.datosReservaGlobal.pasajero = datosDelPaso;
+      } else if (this.pasoActual === 2) {
+        this.datosReservaGlobal.destino = datosDelPaso;
+      }
+      this.pasoActual++; // Avanzamos al siguiente paso
+      console.log('Datos globales hasta ahora:', this.datosReservaGlobal);
+    },
+    // Método llamado cuando un componente hijo emite 'paso-anterior'
+    retrocederPaso() {
+      this.pasoActual--; // Retrocedemos un paso
+    }
   }
 }
 </script>
 
 <style>
-/* Estilos globales para la aplicación */
+/* Los estilos de App.vue del concepto anterior ya están aquí */
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
@@ -45,5 +82,15 @@ h1 {
   color: #333;
   text-align: center;
   margin-bottom: 20px;
+}
+
+progress {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+p {
+    text-align: center;
+    margin-bottom: 20px;
 }
 </style>

@@ -118,7 +118,7 @@ export default {
 
       if (!tieneErrores) {
         console.log('Datos del pasajero válidos:', this.pasajero);
-        // Aquí eventualmente emitiremos un evento para que el componente padre avance
+        this.$emit('siguiente-paso', this.pasajero);
       }
     }
   }
