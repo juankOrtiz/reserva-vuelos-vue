@@ -4,8 +4,40 @@
     <progress :value="pasoActual" max="3"></progress>
     <p>Paso {{ pasoActual }} de 3</p>
 
-    <div class="reset-button-container" v-if="pasoActual > 1">
-      <button type="button" @click="confirmarReset" class="reset-btn">Borrar y Reiniciar</button>
+    <div class="top-buttons-container">
+      <div class="reset-button-container" v-if="pasoActual >= 2">
+        <button type="button" @click="confirmarReset" class="reset-btn">Borrar y Reiniciar</button>
+      </div>
+
+      <div class="show-data-container" v-if="pasoActual >= 2">
+        <button type="button" @click.stop="toggleTooltip" class="show-data-btn">Datos actuales</button>
+        <div v-if="showTooltip" class="data-tooltip">
+          <h4>Datos actuales de la reserva:</h4>
+          <p><strong>Pasajero:</strong></p>
+          <ul>
+            <li>Nombre: {{ datosReservaGlobal.pasajero.nombre || 'N/A' }}</li>
+            <li>Documento: {{ datosReservaGlobal.pasajero.tipoDocumento || 'N/A' }} - {{ datosReservaGlobal.pasajero.numeroDocumento || 'N/A' }}</li>
+          </ul>
+
+          <p><strong>Origen:</strong></p>
+          <ul>
+            <li>Provincia: {{ getNombreProvinciaTooltip(datosReservaGlobal.destino.provinciaOrigen) }}</li>
+            <li>Ciudad: {{ getNombreCiudadTooltip(datosReservaGlobal.destino.ciudadOrigen, datosReservaGlobal.destino.provinciaOrigen) }}</li>
+          </ul>
+
+          <p><strong>Destino:</strong></p>
+          <ul>
+            <li>Provincia: {{ getNombreProvinciaTooltip(datosReservaGlobal.destino.provinciaDestino) }}</li>
+            <li>Ciudad: {{ getNombreCiudadTooltip(datosReservaGlobal.destino.ciudadDestino, datosReservaGlobal.destino.provinciaDestino) }}</li>
+          </ul>
+
+          <p v-if="datosReservaGlobal.vueloSeleccionado">
+            <strong>Vuelo:</strong> {{ datosReservaGlobal.vueloSeleccionado.aerolinea }} - {{ datosReservaGlobal.vueloSeleccionado.numeroVuelo }}
+          </p>
+          <p v-else><strong>Vuelo:</strong> No seleccionado</p>
+
+        </div>
+      </div>
     </div>
 
     <DatosPasajero v-if="pasoActual === 1"
@@ -62,7 +94,8 @@ export default {
         vueloSeleccionado: null
       },
       provincias: [], // Datos maestros de provincias
-      todasLasCiudades: {} // Datos maestros de ciudades
+      todasLasCiudades: {}, // Datos maestros de ciudades
+      showTooltip: false // Controla la visibilidad del tooltip de datos actuales
     };
   },
   // 'created' hook: se ejecuta antes de que el componente sea montado en el DOM
@@ -73,6 +106,14 @@ export default {
 
     // 2. Intentar cargar los datos de la reserva y el paso desde LocalStorage
     this.cargarEstadoDesdeLocalStorage();
+  },
+  mounted() {
+    // Añadir listener global para cerrar el tooltip al hacer clic fuera
+    document.addEventListener('click', this.closeTooltipOnClickOutside);
+  },
+  beforeUnmount() {
+    // Remover listener global antes de que el componente se desmonte
+    document.removeEventListener('click', this.closeTooltipOnClickOutside);
   },
   watch: {
     datosReservaGlobal: {
@@ -173,6 +214,26 @@ export default {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STEP_KEY);
       console.log('LocalStorage limpiado.');
+    },
+    // Método para alternar la visibilidad del tooltip
+    toggleTooltip() {
+      this.showTooltip = !this.showTooltip;
+    },
+    // Método para cerrar el tooltip al hacer clic fuera de él
+    closeTooltipOnClickOutside(event) {
+      if (this.showTooltip && !this.$el.querySelector('.data-tooltip').contains(event.target) && !this.$el.querySelector('.show-data-btn').contains(event.target)) {
+        this.showTooltip = false;
+      }
+    },
+    // Métodos auxiliares para mostrar nombres en el tooltip
+    getNombreProvinciaTooltip(id) {
+        const provincia = this.provincias.find(p => p.id == id);
+        return provincia ? provincia.nombre : 'N/A';
+    },
+    getNombreCiudadTooltip(id, provinciaId) {
+        const ciudadesProvincia = this.todasLasCiudades[provinciaId] || [];
+        const ciudad = ciudadesProvincia.find(c => c.id == id);
+        return ciudad ? ciudad.nombre : 'N/A';
     }
   }
 }
@@ -217,10 +278,18 @@ p {
     margin-bottom: 20px;
 }
 
-/* Estilos para el nuevo botón de reseteo */
+/* Contenedor para alinear los botones superiores */
+.top-buttons-container {
+    display: flex;
+    justify-content: space-between; /* Alinea los elementos a los extremos */
+    align-items: flex-start; /* Alinea al inicio verticalmente */
+    margin-bottom: 20px;
+    position: relative; /* Para el posicionamiento absoluto del tooltip */
+}
+
+/* Estilos para el botón de reseteo */
 .reset-button-container {
-  text-align: right; /* Alinea el botón a la derecha */
-  margin-bottom: 20px;
+  text-align: left;
 }
 
 .reset-btn {
@@ -236,5 +305,64 @@ p {
 
 .reset-btn:hover {
   background-color: #c82333;
+}
+
+/* Estilos para el botón "Datos actuales" y el tooltip */
+.show-data-container {
+    position: relative; /* Esencial para que el tooltip se posicione en relación a este contenedor */
+    text-align: right; /* Alinea a la derecha dentro de su contenedor flex */
+}
+
+.show-data-btn {
+    background-color: #17a2b8; /* Un color distinto, como un azul claro */
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.show-data-btn:hover {
+    background-color: #138496;
+}
+
+.data-tooltip {
+    position: absolute; /* Posicionamiento absoluto respecto a .show-data-container */
+    top: calc(100% + 10px); /* 10px debajo del botón */
+    right: 0; /* Alineado a la derecha del botón */
+    width: 300px; /* Ancho fijo para el tooltip */
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+    text-align: left; /* Alinea el texto del tooltip a la izquierda */
+}
+
+.data-tooltip h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+    text-align: left; /* Asegura que el título también esté a la izquierda */
+}
+
+.data-tooltip p, .data-tooltip ul {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+    text-align: left; /* Asegura que el texto esté a la izquierda */
+}
+
+.data-tooltip ul {
+    list-style: none; /* Quita viñetas por defecto */
+    padding-left: 10px; /* Indentación para la lista */
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.data-tooltip ul li {
+    margin-bottom: 3px;
 }
 </style>
