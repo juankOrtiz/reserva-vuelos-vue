@@ -14,7 +14,7 @@
 
     <div class="form-group" v-if="reserva.provinciaOrigen">
       <label for="ciudadOrigen">Ciudad de Origen:</label>
-      <select id="ciudadOrigen" v-model="reserva.ciudadOrigen" :disabled="ciudadesOrigen.length === 0">
+      <select id="ciudadOrigen" v-model="reserva.ciudadOrigen" :disabled="ciudadesOrigen.length === 0" @change="validarCampo('ciudadOrigen')">
         <option value="">Seleccione una ciudad</option>
         <option v-for="ciudad in ciudadesOrigen" :key="ciudad.id" :value="ciudad.id">
           {{ ciudad.nombre }}
@@ -36,7 +36,7 @@
 
     <div class="form-group" v-if="reserva.provinciaDestino">
       <label for="ciudadDestino">Ciudad de Destino:</label>
-      <select id="ciudadDestino" v-model="reserva.ciudadDestino" :disabled="ciudadesDestino.length === 0">
+      <select id="ciudadDestino" v-model="reserva.ciudadDestino" :disabled="ciudadesDestino.length === 0" @change="validarCampo('ciudadDestino')">
         <option value="">Seleccione una ciudad</option>
         <option v-for="ciudad in ciudadesDestino" :key="ciudad.id" :value="ciudad.id">
           {{ ciudad.nombre }}
@@ -45,7 +45,7 @@
       <p v-if="errores.ciudadDestino" class="error-message">{{ errores.ciudadDestino }}</p>
     </div>
 
-    <button type="button" @click="$emit('paso-anterior')">Anterior</button>
+    <button type="button" @click="$emit('paso-anterior')" class="prev-btn">Anterior</button>
     <button type="submit">Siguiente</button>
   </form>
 </template>
