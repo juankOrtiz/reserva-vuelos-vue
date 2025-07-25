@@ -4,6 +4,10 @@
     <progress :value="pasoActual" max="3"></progress>
     <p>Paso {{ pasoActual }} de 3</p>
 
+    <div class="reset-button-container" v-if="pasoActual > 1">
+      <button type="button" @click="confirmarReset" class="reset-btn">Borrar y Reiniciar</button>
+    </div>
+
     <DatosPasajero v-if="pasoActual === 1"
         :datosIniciales="datosReservaGlobal.pasajero"
         @siguiente-paso="avanzarPaso" />
@@ -149,6 +153,14 @@ export default {
     retrocederPaso() {
       this.pasoActual--; // Retrocedemos un paso
     },
+    confirmarReset() {
+      if (window.confirm('¿Estás seguro de que quieres borrar toda la reserva y empezar de nuevo? Esta acción es irreversible.')) {
+        this.resetearReserva();
+        console.log('Reserva borrada y reiniciada por el usuario.');
+      } else {
+        console.log('Reseteo cancelado por el usuario.');
+      }
+    },
     resetearReserva() {
       console.log('Reserva completada. Reiniciando formulario...');
       this.pasoActual = 1; // Volver al primer paso
@@ -203,5 +215,26 @@ progress {
 p {
     text-align: center;
     margin-bottom: 20px;
+}
+
+/* Estilos para el nuevo botón de reseteo */
+.reset-button-container {
+  text-align: right; /* Alinea el botón a la derecha */
+  margin-bottom: 20px;
+}
+
+.reset-btn {
+  background-color: #dc3545; /* Rojo para indicar una acción destructiva */
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  margin-left: 10px; /* Para separarlo de otros elementos si los hubiera */
+}
+
+.reset-btn:hover {
+  background-color: #c82333;
 }
 </style>
